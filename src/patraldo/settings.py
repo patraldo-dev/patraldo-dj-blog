@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import environ
+import helpers.cloudflare
+import os
+from django.core.management.utils import get_random_secret_key
 from decouple import config as env_config
 
 try:
@@ -19,23 +23,34 @@ except:
     import os
     config = os.environ.get
 
-
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+#BASE_DIR = Path(__file__).resolve().parent.parent
+# Set the project base directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Take environment variables from .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ypxlu!dx+x*%229mbqfr(mt8k*&-$#nzi)&^jb4m-x8o3zeu#j'
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DJANGO_DEBUG", cast=bool, default=False)
 
-ALLOWED_HOSTS = []
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = env.str("SECRET_KEY", default=get_random_secret_key())  # <-- Updated!
+
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+
+#CSRF_TRUSTED_ORIGINS = ['https://*.fly.dev']  # <-- Updated!
+
 
 
 # Application definition
@@ -47,6 +62,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'blog',
 ]
 
 MIDDLEWARE = [
@@ -85,8 +101,14 @@ WSGI_APPLICATION = 'patraldo.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASS'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
+        'ATOMIC_REQUESTS': True,
+
     }
 }
 
@@ -113,9 +135,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-mx'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Mexico_City'
 
 USE_I18N = True
 
@@ -127,7 +149,41 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+CLOUDFLARE_R2_BUCKET=config("CLOUDFLARE_R2_BUCKET")
+CLOUDFLARE_R2_ACCESS_KEY=config("CLOUDFLARE_R2_ACCESS_KEY")
+CLOUDFLARE_R2_SECRET_KEY=config("CLOUDFLARE_R2_SECRET_KEY")
+CLOUDFLARE_R2_BUCKET_ENDPOINT=config("CLOUDFLARE_R2_BUCKET_ENDPOINT")
+
+CLOUDFLARE_R2_CONFIG_OPTIONS = {}
+bucket_name = config("CLOUDFLARE_R2_BUCKET")
+endpoint_url = config("CLOUDFLARE_R2_BUCKET_ENDPOINT")
+access_key = config("CLOUDFLARE_R2_ACCESS_KEY")
+secret_key = config("CLOUDFLARE_R2_SECRET_KEY")
+
+if all([bucket_name, endpoint_url, access_key, secret_key]):
+    CLOUDFLARE_R2_CONFIG_OPTIONS = {
+        "bucket_name": config("CLOUDFLARE_R2_BUCKET"),
+        "default_acl": "public-read",  # "private"
+        "signature_version": "s3v4",
+        "endpoint_url": config("CLOUDFLARE_R2_BUCKET_ENDPOINT"),
+        "access_key": config("CLOUDFLARE_R2_ACCESS_KEY"),
+        "secret_key": config("CLOUDFLARE_R2_SECRET_KEY"),
+    }
+
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "helpers.cloudflare.storages.MediaFileStorage",
+        "OPTIONS": CLOUDFLARE_R2_CONFIG_OPTIONS,
+    },
+    "staticfiles": {
+        "BACKEND": "helpers.cloudflare.storages.StaticFileStorage",
+        "OPTIONS": CLOUDFLARE_R2_CONFIG_OPTIONS,
+    },
+}
