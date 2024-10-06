@@ -1,4 +1,4 @@
-#!/home/patraldo/patraldo-dj-blog/blogvenv/bin/python
+#!/home/patraldo/patraldo-dj-blog/blogvenv/bin/python3.11
 # -*- coding: utf-8 -*-
 import re
 import sys

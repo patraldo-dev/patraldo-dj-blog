@@ -1,0 +1,2 @@
+Requirement already satisfied: gunicorn in ./blogvenv/lib/python3.11/site-packages (20.1.0)
+Requirement already satisfied: setuptools>=3.0 in ./blogvenv/lib/python3.11/site-packages (from gunicorn) (66.1.1)
