@@ -26,5 +26,3 @@ EXPOSE 8000
 
 CMD ["gunicorn","--bind",":8000","--workers","2","patraldo.wsgi"]
 
-# Set SECRET_KEY for building purposes
-ENV SECRET_KEY "non-secret-key-for-building-purposes"  # <-- Updated!

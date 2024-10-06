@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import environ
-import helpers.cloudflare
+import helpers.cloudflare.settings
 import os
 from django.core.management.utils import get_random_secret_key
 from decouple import config as env_config
@@ -99,18 +99,18 @@ WSGI_APPLICATION = 'patraldo.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASS'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
-        'ATOMIC_REQUESTS': True,
-
-    }
-}
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql',
+#        'NAME': ('DB_NAME'), 
+#        'USER': ('DB_USER'),
+#        'PASSWORD': ('DB_PASS'),
+#        'HOST': ('DB_HOST'),
+#        'PORT': ('DB_PORT'),
+#        'ATOMIC_REQUESTS': True,
+#
+#    }
+#}
 
 
 # Password validation
@@ -149,29 +149,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-CLOUDFLARE_R2_BUCKET=config("CLOUDFLARE_R2_BUCKET")
-CLOUDFLARE_R2_ACCESS_KEY=config("CLOUDFLARE_R2_ACCESS_KEY")
-CLOUDFLARE_R2_SECRET_KEY=config("CLOUDFLARE_R2_SECRET_KEY")
-CLOUDFLARE_R2_BUCKET_ENDPOINT=config("CLOUDFLARE_R2_BUCKET_ENDPOINT")
-
-CLOUDFLARE_R2_CONFIG_OPTIONS = {}
-bucket_name = config("CLOUDFLARE_R2_BUCKET")
-endpoint_url = config("CLOUDFLARE_R2_BUCKET_ENDPOINT")
-access_key = config("CLOUDFLARE_R2_ACCESS_KEY")
-secret_key = config("CLOUDFLARE_R2_SECRET_KEY")
-
-if all([bucket_name, endpoint_url, access_key, secret_key]):
-    CLOUDFLARE_R2_CONFIG_OPTIONS = {
-        "bucket_name": config("CLOUDFLARE_R2_BUCKET"),
-        "default_acl": "public-read",  # "private"
-        "signature_version": "s3v4",
-        "endpoint_url": config("CLOUDFLARE_R2_BUCKET_ENDPOINT"),
-        "access_key": config("CLOUDFLARE_R2_ACCESS_KEY"),
-        "secret_key": config("CLOUDFLARE_R2_SECRET_KEY"),
-    }
-
-
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -180,10 +157,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STORAGES = {
     "default": {
         "BACKEND": "helpers.cloudflare.storages.MediaFileStorage",
-        "OPTIONS": CLOUDFLARE_R2_CONFIG_OPTIONS,
+        "OPTIONS": helpers.cloudflare.settings.CLOUDFLARE_R2_CONFIG_OPTIONS,
     },
     "staticfiles": {
         "BACKEND": "helpers.cloudflare.storages.StaticFileStorage",
-        "OPTIONS": CLOUDFLARE_R2_CONFIG_OPTIONS,
+        "OPTIONS": helpers.cloudflare.settings.CLOUDFLARE_R2_CONFIG_OPTIONS,
     },
 }

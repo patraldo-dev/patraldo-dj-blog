@@ -11,6 +11,18 @@ console_command = '/code/manage.py shell'
 
 [env]
   PORT = '8000'
+  DJANGO_DEBUG=1
+  ALLOWED_HOSTS=['localhost','patraldo.com','127.0.0.1','src-broken-dew-5673.fly.dev']
+  DB_NAME='patraldo-dj-blog-postgres'
+  DB_USER='postgres'
+  DB_PASS='aUrFDxu7TWaRBGH'
+  DB_HOST='patraldo-dj-blog-postgres.internal'
+  DB_PROXY_PORT='5432'
+  DB_POSTGRES_PORT='5433'
+  DB_FLYCAST='fdaa:a:56fd:0:1::6'
+  CLOUDFLARE_R2_BUCKET='patraldo-dj-blog'
+
+
 
 [http_service]
   internal_port = 8000
